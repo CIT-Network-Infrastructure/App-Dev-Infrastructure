@@ -1,0 +1,9 @@
+form :is(label, input) {
+    display: block;
+}
+form {
+    width: 45%;
+    margin: 5px auto;
+    background-color: aliceblue;
+    padding: 15px 10px;
+}

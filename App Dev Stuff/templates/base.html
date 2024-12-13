@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>{% block title %} {% endblock %}</title>
+   <link rel="icon" href="{{ url_for('static', filename='img/webapp_logo_optimized1.png') }}">
+   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+   <div class="content">
+      {% block content %} {% endblock %}
+   </div>
+   <footer>
+      {#{% block footer %}
+         &copy; Copyright 2024 by Cameron Joyce
+      {% endblock %}#}
+   </footer>
+</body>
+</html>
