@@ -1,12 +1,44 @@
 <!DOCTYPE html>
 <html>
-    <head>
-
+	<head>
+        <title>Login | App Dev Server</title>
+        <link rel="stylesheet" type="text/css" href="css.css">
+        <link rel="stylesheet" href="https://use.typekit.net/hvu8bfy.css">
+    
     </head>
+
+    <div id="bg">
+        <div id="bgsvg"></div>
+    </div>
+
     <body>
-        <h1>Home</h1>
-        <button><a href="{{ url_for('login')}}">Login</a></button>
-        <button><a href="{{ url_for('signup') }}">Sign up</a></button>
-    </form>
+        <div class="wrapper">
+
+            <h1>Welcome to App Dev!</h1>
+
+            <div id="loginBox">
+                <h2>Username</h2>
+                <input type="text" ,="" id="username">
+                <h2>Password</h2>
+                <input type="text" ,="" id="password">
+
+                <a id="loginButton" href="{{ url_for('login')}}">Login</a>
+                <a id="loginButton" href="{{ url_for('signup') }}">Sign up</a>
+                </form>
+                
+            </div>
+
+            <div id="afterLogin">
+                </br>
+                <a>Access Web Server</a>
+                </br>
+                <a>Access Docker Container</a>
+                <br>
+                <a>All Active Servers</a>
+
+            </div>
+
+        </div>
+
     </body>
 </html>
