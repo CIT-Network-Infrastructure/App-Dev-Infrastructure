@@ -1,4 +1,3 @@
-
 from flask import session
 from flask import render_template
 from flask import request
@@ -13,6 +12,7 @@ from datetime import date as dt
 
 from userdb import User, app, db
 
+
 def login_required(f):
     """
     Decorator to require login for specific routes
@@ -23,7 +23,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            return jsonify({"error": "Unauthorized"}), 401
+            return  """jsonify({"error": "Unauthorized"})""", 401
         return f(*args, **kwargs)
     return decorated_function
 
@@ -34,63 +34,63 @@ def register():
     
     :return: Registration result
     """
-    data = request.get_json()
     
     # Validate input
-    if not data or not data.get('username') or not data.get('password'):
+    if not request.form or not request.form['username'] or not request.form['password']:
         return jsonify({"error": "Username and password are required"}), 400
     
     try:
         # Check if user already exists
-        existing_user = User.query.filter_by(username=data['username']).first()
+        existing_user = User.query.filter_by(username=request.form['username']).first()
         if existing_user:
             return jsonify({"error": "Username already exists"}), 409
         
         # Create new user
         new_user = User(
-            username=data['username'], 
-            password=data['password']
+            name=request.form['fullname'],
+            username=request.form['username'], 
+            password=request.form['password']
         )
         
         # Add to database
         db.session.add(new_user)
         db.session.commit()
         
-        return jsonify({
-            "message": "User registered successfully", 
-            "user_id": new_user.id,
-            "port": new_user.port
-        }), 201
+        return redirect(url_for('signin'))
+        # jsonify({
+        #     "message": "User registered successfully", 
+        #     "user_id": new_user.id,
+        #     "port": new_user.port
+        # }), 201
     
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     """
     User login endpoint
     
     :return: Login result
     """
-    data = request.get_json()
     
     # Validate input
-    if not data or not data.get('username') or not data.get('password'):
+    if not request.form or not request.form['username'] or not request.form['password']:
         return jsonify({"error": "Username and password are required"}), 400
     
     # Find user
-    user = User.query.filter_by(username=data['username']).first()
+    user = User.query.filter_by(username=request.form['username']).first()
     
     # Check credentials
-    if user and user.check_password(data['password']):
+    if user and user.check_password(request.form['password']):
         # Create session
         session['user_id'] = user.id
-        return redirect(url_for('get_profile')), 200
+        return redirect(url_for('get_profile'))# jsonify({"message": "Successfully logged in"}), 200
     
     return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
     """
@@ -99,7 +99,7 @@ def logout():
     :return: Logout result
     """
     session.pop('user_id', None)
-    return redirect(url_for('index')), jsonify({"message": "Logged out successfully"}), 200
+    return redirect(url_for('index'))#, jsonify({"message": "Logged out successfully"}), 200
 
 @app.route('/change_password', methods=['POST'])
 @login_required
@@ -142,11 +142,11 @@ def get_profile():
     :return: User profile information
     """
     user = User.query.get(session['user_id'])
-    return render_template('home.html', user=user.username), jsonify({
-        "id": user.id,
-        "username": user.username,
-        "port": user.port
-    }), 200
+    return render_template('home.html', user=user.username)#  , jsonify({
+    #     "id": user.id,
+    #     "username": user.username,
+    #     "port": user.port
+    # }), 200
 
 def create_tables():
     """
@@ -176,6 +176,9 @@ def home(username):
 def signup():    
     return render_template('signup.html')
 
+@app.route('/signin')
+def signin():
+    return render_template('login2.html')
 
 # Run the app
 if __name__ == '__main__':

@@ -2,12 +2,28 @@
 <html lang="en">
 <head>
    <meta charset="UTF-8">
-   <title>{% block title %} {% endblock %}</title>
-   <link rel="icon" href="{{ url_for('static', filename='img/webapp_logo_optimized1.png') }}">
+   <title>{% block title %} {% endblock %} | App Dev</title>
+   <!-- <link rel="icon" href="{{ url_for('static', filename='img/webapp_logo_optimized1.png') }}"> -->
    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/css.css') }}">
+   <link rel="stylesheet" href="https://use.typekit.net/hvu8bfy.css">
+
+   {% block head %} {% endblock %}
 </head>
 <body>
+   <nav>
+      <h1 class="nav-logo"><a class="nav-logo" href="/dashboard">App Dev</a></h1>
+      {% if not session.get('user_id') %}
+         <button><a href="/signin">Login</a></button>
+         <button><a href="/signup">Sign up</a></button>
+      {% else %}
+         <button><a href="/logout">Log out</a></button>
+      {% endif %}
+   </nav>
    <div class="content">
+      <div id="bg">
+         <div id="bgsvg"></div>
+     </div>
       {% block content %} {% endblock %}
    </div>
    <footer>

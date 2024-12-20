@@ -1,6 +1,16 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>{% block title %}Home | User{% endblock %}</h1>
-<h3>Hello, {{ user }}</h3>
+<main name="user-profile">
+    <h1>{% block title %}Your Profile{% endblock %}</h1>
+    <div class="profile-wrapper">
+        <h2>Hello, {{ user }}</h2>
+        <div id="portal">
+            <button class="docker" id="loginButton">Go to Docker container</button>
+            <button class="local" id="loginButton">View your website</button>
+            <button class="others" id="loginButton">View other active websites</button>
+        </div>
+    </div>
+
+</main>
 {% endblock %}

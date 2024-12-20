@@ -1,27 +1,17 @@
-import os
 import hashlib
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
 from sqlalchemy import Sequence
+import psycopg2
+import sqlalchemy.exc as se
 
-# Create Flask application
-app = Flask(__name__)
-hostnameServer = '10.180.98.17'
-# '10.180.98.17'
-app.config['SECRET_KEY'] = os.urandom(24)
-# Database URI takes the form 'postgresql://username:password@host:port/database'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://verdict:student@'+hostnameServer+':5432/verdict'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-print('App config complete.')
+from config import FlaskAppDB
 
-app_context = app.app_context()
-app_context.push()
 
-# Initialize extensions
-db = SQLAlchemy(app)
-CORS(app)
+flask = FlaskAppDB('AppDev-Development')
+
+app = flask.app
+db = flask.database
 print('Database variable declared.')
+
 # Create a sequence for ports
 port_sequence = Sequence('port_sequence', start=4000)
 
@@ -33,17 +23,24 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(64), nullable=False)
-    port = db.Column(db.Integer, server_default=port_sequence.next_value(), unique=True, nullable=False)
+    port = db.Column(db.Integer, nullable=False, unique=True,  default=lambda: User.get_next_port())
 
-    def __init__(self, username, password):
+    def __init__(self, name, username, password):
         """
         Initialize a new user
         
         :param username: User's username
         :param password: User's password
         """
+
+        self.name = name
         self.username = username
         self.password_hash = self._hash_password(password)
+
+    @staticmethod
+    def get_next_port():
+        last_record = User.query.order_by(User.port.desc()).first()
+        return 4000 if not last_record else last_record.port + 1
 
     @staticmethod
     def _hash_password(password: str) -> str:
@@ -65,13 +62,33 @@ class User(db.Model):
         return self.password_hash == self._hash_password(password)
 
 print("Creating tables...")
-db.create_all()
-print("Successfully created tables.")
+flask.init_db()
+# db.create_all()
+print("Successfully initialized database.")
 
-print('Creating dummy user...')
-newuser = User("Cameron Joyce", "joycece", "12345")
-with app.app_context():
-    db.session.add(newuser)
-    db.session.commit()
-print("Successfully added user to database")
+def createDummy(name, username, password):
+    print('Creating dummy user...')
+    newuser = User(name=name, username=username, password=password) 
+    with app.app_context():
+        try:
+            db.session.add(newuser)
+            db.session.commit()
+        except psycopg2.OperationalError:
+            return "Cannot connect to server (TCP/IP)"
+        except AttributeError as err:
+            return err
+        except se.IntegrityError as err:
+            return err.detail
+            
+
+    print("Successfully added user to database")
+    try:
+        newuser = User.query.filter_by(username=username).first()
+        id = newuser.id
+    except AttributeError as err:
+        return err
+    return id
+
+print(createDummy("John Doe", "doej", "23456"))
+
 
