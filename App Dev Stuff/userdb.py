@@ -3,13 +3,10 @@ from sqlalchemy import Sequence
 import psycopg2
 import sqlalchemy.exc as se
 
-from config import FlaskAppDB
+from config import flaskapp
 
-
-flask = FlaskAppDB('AppDev-Development')
-
-app = flask.app
-db = flask.database
+app = flaskapp.app
+db = flaskapp.sql_alchemy
 
 # Create a sequence for ports
 port_sequence = Sequence('port_sequence', start=4000)
@@ -60,7 +57,7 @@ class User(db.Model):
         """
         return self.password_hash == self._hash_password(password)
 
-flask.init_db()
+flaskapp.init_db(create=True)
 
 def createDummy(name, username: str, password):
     print('Creating dummy user...')

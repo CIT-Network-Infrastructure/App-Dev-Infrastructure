@@ -3,10 +3,7 @@ import sys
 import os
 import ctypes
 
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import text
-from flask_cors import CORS
+from flaskappdb import FlaskAppDB, FlaskDB
 
 # Function to check if the script is running as admin on Windows
 def is_admin():
@@ -72,20 +69,24 @@ def install_requirements(requirements_file="requirements.txt"):
     os.environ['HAS_REQS'] = 'TRUE'
     print(f"Successfully installed packages from {requirements_file}.")
 
+SETTINGS = 'custom'
 
-if 'HAS_REQS' not in os.environ:
-    # Call the function
-    install_requirements()
+if SETTINGS == 'default':
+    usr_install = input('Do you want to install the required packages? (yes/no) ')
 
-SERVER_MODE = 'home'
+    if 'HAS_REQS' in os.environ or usr_install in ['yes', 'y']:
+        # Call the function
+        install_requirements()
 
-def build_uri(
+SERVER_MODE = input ('What is the server mode? ')
+
+def set_credentials(
         mode=SERVER_MODE, 
         hostname=None):
     if mode == 'verdict':
         un = 'verdict'
         pw = 'student'
-        hostnameServer = 'verdict'
+        hostnameServer = 'drhscit.org'
         db = 'verdict'
     elif mode == 'home':
         un = 'postgres'
@@ -97,111 +98,24 @@ def build_uri(
         hostnameServer = hostname
     port = '5432'
 
-    # Database URI takes the form 'postgresql://username:password@host:port/database'
-    URI = f'postgresql+psycopg2://{un}:{pw}@{hostnameServer}:{port}/{db}'
-    return URI
+    print('Credintials set.')
+    flaskdb = FlaskDB('AppDevDB', un, pw, hostnameServer, port, db)
+    return flaskdb
 
 CONFIG_MODE = 'dev'
 
+APP_CREDENTIALS = set_credentials()
+
 #App configuration dictionary
 APP_CONFIG =    {
-    'SQLALCHEMY_DATABASE_URI': build_uri(),
+    'SQLALCHEMY_DATABASE_URI': APP_CREDENTIALS.make_uri(),
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'SECRET_KEY': os.urandom(24)
 }
 
-class FlaskAppDB:
-    """Creates a `Flask` app instance with a `SQLAlchemy` database session.
-    """
-    def __init__(
-                self, 
-                 name: str, 
-                 uri: str | None = build_uri(), 
-                 flask_app: Flask | None = None, 
-                 database: SQLAlchemy | None = None,
-                 app_context = None
-                 ) -> None:
-        self.name = f"{name}-{CONFIG_MODE}"
-        self.app = flask_app
-        self.database =  database
-        self.uri = uri
-        self.app_context = None
-        self.config = None
-        self.is_configured = False
-        self.app_context = app_context
-        self.has_context = False
-        self.make_app()
-    
-    # App configuration method
-    def configure_app(
-            self,
-            config_dict: dict[str, any]
-            ) -> None:
-        for variable, value in config_dict.items():
-            self.app.config[variable] = value
-        
-        CORS(self.app)
-        print('CORS configured.')
-        
-        self.uri = config_dict['SQLALCHEMY_DATABASE_URI']
-        self.config = config_dict
-        self.is_configured = True
-        print('App configured.')
-
-    # Set context
-    def set_app_context(self) -> None:
-        app_context = self.app.app_context()
-        app_context.push()
-        self.app_context = app_context
-        self.has_context = True
-        print('App context set.')
-
-    # App creation method
-    def make_app(
-            self, 
-            CONFIG_DICT: dict[str, any]=APP_CONFIG
-        ) -> None:
-
-        # Create a Flask app
-        self.app = Flask(__name__)
-
-        # Set app.config variables
-        self.configure_app(CONFIG_DICT)
-        
-        self.database = SQLAlchemy(self.app)
-
-        if self.uri is not None:
-            print (f"Connected to database at URI '{self.uri}'")
-            print("App ready for use.")
-            return
-        else:
-            raise ValueError("'SQLALCHEMY_DATABASE_URI' must be set in order to connect to a database")
-        
-        
-        
-    def init_db(self, schema=None, create=True,  drop=False, insert=False, **kwargs):
-        
-        self.set_app_context()
-        if schema:
-            with self.app_context:
-                self.database.session.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
-                return schema
-        
-        with self.app_context:
-            if create:
-
-                if drop:
-                    print('Dropping tables...')
-                    self.database.drop_all()
-                    print('Dropped all tables')
-                print('Creating database tables...')
-                self.database.create_all()
-                print('Successfully created tables.')
-        
-        if insert:
-            for key, value in kwargs.items():
-                self.database.session.add_all(value)
-                self.database.session.commit()
-                print(f"Successfully added {key} to database")
-        print("Successfully initialized database.")
-        
+flaskapp = FlaskAppDB(
+    name='AppDev-Development',
+    config_mode=CONFIG_MODE,
+    app_config=APP_CONFIG,
+    flaskdb=APP_CREDENTIALS
+    )
