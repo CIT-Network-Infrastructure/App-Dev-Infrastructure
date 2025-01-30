@@ -86,6 +86,6 @@ def createDummy(name, username: str, password):
     except AttributeError as err:
         return err
 
-print(createDummy("John Doe", "doej", "23456"))
+# print(createDummy("John Doe", "doej", "23456"))
 
 
