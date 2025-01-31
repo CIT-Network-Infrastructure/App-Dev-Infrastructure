@@ -71,6 +71,11 @@ def set_credentials(mode=SERVER_MODE, hostname=None):
         pw = '12pg345'
         hostnameServer = '127.0.0.1'
         db = 'postgres'
+    else:
+	un = 'verdict'
+        pw = 'student'
+        hostnameServer = 'drhscit.org'
+        db = 'verdict'
 
     if hostname:
         hostnameServer = hostname
